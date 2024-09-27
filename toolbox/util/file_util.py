@@ -712,3 +712,11 @@ class FileUtil:
         :returns: Returns path to where execution was started.
         """
         return os.path.abspath("")
+
+    @staticmethod
+    def get_current_directory(file_abs_path: str) -> str:
+        """
+        Gets the current directory of the file.
+        :param file_abs_path: __file__ of the current file.
+        """
+        return os.path.dirname(os.path.realpath(file_abs_path))

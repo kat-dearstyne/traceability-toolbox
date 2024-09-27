@@ -2,7 +2,7 @@ import logging
 from typing import Dict, List, Optional, Set, Tuple, TypedDict, Union
 
 import anthropic
-
+from anthropic.types.tool_use_block import ToolUseBlock
 from toolbox.constants import anthropic_constants, environment_constants
 from toolbox.constants.environment_constants import ANTHROPIC_KEY
 from toolbox.constants.symbol_constants import EMPTY_STRING
@@ -160,14 +160,18 @@ class AnthropicManager(AbstractLLMManager[AnthropicResponse]):
         return response
 
     @staticmethod
-    def _extract_response(res: dict) -> Union[str, Exception]:
+    def _extract_response(res: dict) -> Union[str, Dict, Exception]:
         """
         Gets the LLM response or the error msg if exception occurred.
         :param res: The response.
         :return: The LLM response or the error msg if exception occurred
         """
         if hasattr(res, "content"):
-            return res.content[0].text
+            content = res.content[0]
+            if isinstance(content, ToolUseBlock):
+                return {"name": content.name, **content.input}
+            else:
+                return content.text
         else:
             return Exception(res["error"])
 

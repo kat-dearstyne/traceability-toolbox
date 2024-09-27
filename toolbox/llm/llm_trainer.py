@@ -1,5 +1,6 @@
 from collections import OrderedDict
 from typing import Any, Dict, List, Optional, Tuple, Union
+from pydantic.v1.main import BaseModel
 
 from toolbox.constants.symbol_constants import EMPTY_STRING, NEW_LINE
 from toolbox.data.dataframes.prompt_dataframe import PromptDataFrame
@@ -9,6 +10,7 @@ from toolbox.data.tdatasets.dataset_role import DatasetRole
 from toolbox.data.tdatasets.idataset import iDataset
 from toolbox.data.tdatasets.prompt_dataset import PromptDataset
 from toolbox.data.tdatasets.trace_dataset import TraceDataset
+from toolbox.graph.llm_tools.tool import BaseTool
 from toolbox.llm.abstract_llm_manager import AbstractLLMManager, CONTENT_KEY, Message
 from toolbox.llm.llm_responses import ClassificationResponse, GenerationResponse
 from toolbox.llm.llm_task import LLMCompletionType
@@ -19,6 +21,7 @@ from toolbox.llm.prompts.prompt_builder import PromptBuilder
 from toolbox.traceability.output.trace_prediction_output import TracePredictionOutput
 from toolbox.util.dataframe_util import DataFrameUtil
 from toolbox.util.file_util import FileUtil
+from toolbox.util.reflection_util import ReflectionUtil
 from toolbox.util.llm_response_util import LLMResponseUtil
 
 
@@ -41,6 +44,7 @@ class LLMTrainer:
                            datasets: Union[List[iDataset], iDataset] = None,
                            message_prompts: List[str] = None,
                            system_prompts: List[str] = None,
+                           tools: List[dict | BaseTool]  = None,
                            save_and_load_path: str = EMPTY_STRING,
                            raise_exception: bool = True) -> TracePredictionOutput:
         """
@@ -49,6 +53,7 @@ class LLMTrainer:
         :param datasets: The dataset to use instead of from the dataset manager
         :param message_prompts: The list of prompts to use instead of making from the dataset
         :param system_prompts: List of existing system prompts if applicable.
+        :param tools: The tools available to the model.
         :param save_and_load_path: The path to load or save response
         :param raise_exception: If True, raises an exception if a response fails
         :return: THe prediction response
@@ -57,7 +62,9 @@ class LLMTrainer:
         prompt_df, message_prompts, system_prompts = self._get_prompts_for_predictions(datasets, message_prompts, system_prompts)
 
         res = self._make_generation_request(self.state.llm_manager, message_prompts, system_prompts,
-                                            self.state.completion_type, raise_exception, save_and_load_path)
+                                            self.state.completion_type, raise_exception,
+                                            tools=tools,
+                                            save_and_load_path=save_and_load_path)
 
         batch_responses = LLMResponseUtil.get_batch_responses(res)
         debugging = [p + NEW_LINE + str(r) for p, r in zip(message_prompts, batch_responses)]
@@ -66,7 +73,7 @@ class LLMTrainer:
                                                                  if isinstance(self.prompt_builders, list)
                                                                  else [self.prompt_builders])})
         prompt_builder_ids = prompt_df[PromptKeys.PROMPT_BUILDER_ID]
-        output = self._create_generation_output(res.batch_responses, prompt_builder_map, prompt_builder_ids)
+        output = self._create_generation_output(res.batch_responses, prompt_builder_map, prompt_builder_ids, tools=tools)
         return output
 
     @staticmethod
@@ -158,6 +165,7 @@ class LLMTrainer:
                                  message_prompts: Union[str, List], system_prompts: Union[str, List] = None,
                                  completion_type: LLMCompletionType = LLMCompletionType.GENERATION,
                                  raise_exception: bool = False,
+                                 tools: List[dict | BaseTool] = None,
                                  save_and_load_path: str = None) -> Union[ClassificationResponse, GenerationResponse]:
         """
         Makes a request to the llm manager to generate a response.
@@ -166,6 +174,7 @@ class LLMTrainer:
         :param system_prompts: The system prompt to provide context in Anthropic convos.
         :param completion_type: The type of completion (generation or classification).
         :param raise_exception: If True, raises an exception if the request fails.
+        :param tools: Tools for the model to use.
         :param save_and_load_path: Path to load or save responses to.
         :return: The response(s) from the model.
         """
@@ -174,14 +183,18 @@ class LLMTrainer:
         reloaded = LLMResponseUtil.reload_responses(save_and_load_path)
         missing_generations = isinstance(reloaded, List) or reloaded is None
         recent_prompt = LLMTrainer._get_most_recent_prompt(message_prompts)  # debugging
+        if tools:
+            tools = [tool.to_tool_schema() if isinstance(tool, BaseTool) else tool for tool in tools]
 
         if missing_generations:
+            additional_params = {"tools": tools} if tools else {}
             res = llm_manager.make_completion_request(
                 completion_type=completion_type,
                 prompt=message_prompts,
                 system=system_prompts,
                 original_responses=reloaded,
-                raise_exception=raise_exception and not save_and_load_path)
+                raise_exception=raise_exception and not save_and_load_path,
+                **additional_params)
             LLMResponseUtil.save_responses(res, save_and_load_path)
         else:
             res = reloaded
@@ -205,7 +218,7 @@ class LLMTrainer:
 
     @staticmethod
     def _create_generation_output(responses: List[str], prompt_builder_map: Dict[str, PromptBuilder],
-                                  prompt_builder_ids: List[str]) -> TracePredictionOutput:
+                                  prompt_builder_ids: List[str], tools: List[str] = None) -> TracePredictionOutput:
         """
         Creates the output for a generation
         :param responses: The response from the completion.
@@ -217,10 +230,15 @@ class LLMTrainer:
             prompt_builder_id_to_response = {p_id: r for r, p_id in zip(responses, prompt_builder_ids)}
             responses = [prompt_builder_id_to_response[p_id] for p_id in prompt_builder_ids]
             prompt_builder_ids = prompt_builder_map.keys()
+        tools = {tools.__name__: tool for tool in tools} if tools else {}
         predictions = []
         for i, (r, p_id) in enumerate(zip(responses, prompt_builder_ids)):
             try:
-                pred = prompt_builder_map[p_id].parse_responses(r) if not isinstance(r, Exception) else r
+                if isinstance(r, dict) and (tool := tools.get(r.get("name"))):
+                    r.pop("name")
+                    pred = tool(**r)
+                else:
+                    pred = prompt_builder_map[p_id].parse_responses(r) if not isinstance(r, Exception) else r
             except Exception as e:
                 print(f"Unable to parse response: r:{r}")
                 pred = None

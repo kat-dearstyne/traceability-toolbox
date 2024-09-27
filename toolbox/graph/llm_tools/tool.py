@@ -57,7 +57,7 @@ class BaseTool(BaseModel):
     def to_schema(cls, state: GraphState) -> Dict:
         """
         Converts the tool to the schema, updating dynamic fields as needed.
-        :param state: The current state of the graph.
+        :param state: The current state of the gr                                               aph.
         :return: The schema of the tool.
         """
         schema = cls.schema()
@@ -85,6 +85,24 @@ class BaseTool(BaseModel):
                 new_property.update(orig_property)
                 schema["properties"][name] = new_property
         return schema
+
+    @classmethod
+    def to_tool_schema(cls) -> Dict[str, str]:
+        """
+        Converts the model to the format expected for anthropic tool use.
+        :return: The tool schema.
+        """
+        schema = cls.schema()
+        tool = {'name': schema['title'],
+                'description': schema['description'],
+                'input_schema': {
+                    "type": "object",
+                    "properties": {prop: {name: descr for name, descr in fields.items() if name in {'description', 'type'}}
+                                   for prop, fields in schema['properties'].items()},
+
+                    'required': schema['required']}
+                }
+        return tool
 
     @abstractmethod
     def update_state(self, state: GraphState) -> None:
