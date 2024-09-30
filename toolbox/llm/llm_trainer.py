@@ -184,7 +184,7 @@ class LLMTrainer:
         missing_generations = isinstance(reloaded, List) or reloaded is None
         recent_prompt = LLMTrainer._get_most_recent_prompt(message_prompts)  # debugging
         if tools:
-            tools = [tool.to_tool_schema() if isinstance(tool, BaseTool) else tool for tool in tools]
+            tools = [tool.to_tool_schema() if ReflectionUtil.is_instance_or_subclass(tool, BaseTool) else tool for tool in tools]
 
         if missing_generations:
             additional_params = {"tools": tools} if tools else {}
@@ -230,7 +230,7 @@ class LLMTrainer:
             prompt_builder_id_to_response = {p_id: r for r, p_id in zip(responses, prompt_builder_ids)}
             responses = [prompt_builder_id_to_response[p_id] for p_id in prompt_builder_ids]
             prompt_builder_ids = prompt_builder_map.keys()
-        tools = {tools.__name__: tool for tool in tools} if tools else {}
+        tools = {tool.__name__: tool for tool in tools} if tools else {}
         predictions = []
         for i, (r, p_id) in enumerate(zip(responses, prompt_builder_ids)):
             try:
