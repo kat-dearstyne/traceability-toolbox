@@ -98,10 +98,10 @@ class BaseTool(BaseModel):
                 'input_schema': {
                     "type": "object",
                     "properties": {prop: {name: descr for name, descr in fields.items() if name in {'description', 'type'}}
-                                   for prop, fields in schema['properties'].items()},
-
-                    'required': schema['required']}
+                                   for prop, fields in schema['properties'].items()}}
                 }
+        if required := schema.get('required'):
+            tool['input_schema']['required'] = required
         return tool
 
     @abstractmethod
