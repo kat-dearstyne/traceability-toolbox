@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Set, Type, Union
 
 import numpy as np
 
+from toolbox.constants.symbol_constants import EMPTY_STRING
 from toolbox.data.dataframes.abstract_project_dataframe import AbstractProjectDataFrame
 from toolbox.data.keys.structure_keys import StructuredKeys, TraceKeys, TraceRelationshipType
 from toolbox.data.objects.trace import Trace
@@ -17,8 +18,10 @@ class TraceDataFrame(AbstractProjectDataFrame):
     OPTIONAL_COLUMNS = [StructuredKeys.Trace.LABEL.value,
                         StructuredKeys.Trace.SCORE.value,
                         StructuredKeys.Trace.EXPLANATION.value,
-                        StructuredKeys.Trace.RELATIONSHIP_TYPE.value]
+                        StructuredKeys.Trace.RELATIONSHIP_TYPE.value,
+                        StructuredKeys.Trace.COLOR.value]
     DEFAULT_FOR_OPTIONAL_COLS = EnumDict({StructuredKeys.Trace.RELATIONSHIP_TYPE: TraceRelationshipType.TRACEABILITY,
+                                          StructuredKeys.Trace.COLOR: EMPTY_STRING,
                                           StructuredKeys.Trace.LABEL.value: np.NAN,
                                           StructuredKeys.Trace.SCORE.value: np.NAN,
                                           StructuredKeys.Trace.EXPLANATION.value: None})
@@ -77,13 +80,14 @@ class TraceDataFrame(AbstractProjectDataFrame):
         """
         for link in links:
             self.add_link(source=link["source"], target=link["target"], label=link["label"], score=link.get("score", None),
-                          explanation=link.get("explanation", None))
+                          explanation=link.get("explanation", None), color=link.get("color", None))
 
     def add_link(self, source: str, target: str,
                  label: int = DEFAULT_FOR_OPTIONAL_COLS[TraceKeys.LABEL],
                  score: float = DEFAULT_FOR_OPTIONAL_COLS[TraceKeys.SCORE],
                  explanation: str = DEFAULT_FOR_OPTIONAL_COLS[TraceKeys.EXPLANATION],
-                 relationship_type: Union[TraceRelationshipType, str] = DEFAULT_FOR_OPTIONAL_COLS[TraceKeys.RELATIONSHIP_TYPE]) \
+                 relationship_type: Union[TraceRelationshipType, str] = DEFAULT_FOR_OPTIONAL_COLS[TraceKeys.RELATIONSHIP_TYPE],
+                 color: str = DEFAULT_FOR_OPTIONAL_COLS[TraceKeys.COLOR]) \
             -> EnumDict:
         """
         Adds link to dataframe
@@ -93,12 +97,13 @@ class TraceDataFrame(AbstractProjectDataFrame):
         :param score: The score of the generated links.
         :param explanation: The explanation for generated trace link.
         :param relationship_type: The type of relationship between the artifacts.
+        :param color: The color to display the link as.
         :return: The newly added link
         """
         link_id = TraceDataFrame.generate_link_id(source, target)
         return self.add_row(
             self.link_as_dict(source_id=source, target_id=target, link_id=link_id, label=label, score=score, explanation=explanation,
-                              relationship_type=relationship_type))
+                              relationship_type=relationship_type, color=color))
 
     def get_links(self, true_only: bool = False, true_link_threshold: float = 0) -> List[EnumDict]:
         """
@@ -143,7 +148,8 @@ class TraceDataFrame(AbstractProjectDataFrame):
     def link_as_dict(source_id: str, target_id: str, link_id: int = None, label: int = DEFAULT_FOR_OPTIONAL_COLS[TraceKeys.LABEL],
                      score: float = DEFAULT_FOR_OPTIONAL_COLS[TraceKeys.SCORE],
                      explanation: str = DEFAULT_FOR_OPTIONAL_COLS[TraceKeys.EXPLANATION],
-                     relationship_type: str = DEFAULT_FOR_OPTIONAL_COLS[TraceKeys.RELATIONSHIP_TYPE]) \
+                     relationship_type: str = DEFAULT_FOR_OPTIONAL_COLS[TraceKeys.RELATIONSHIP_TYPE],
+                     color: str = DEFAULT_FOR_OPTIONAL_COLS[TraceKeys.COLOR]) \
             -> Dict[TraceKeys, Any]:
         """
         Creates a dictionary mapping column names to the corresponding link information
@@ -154,13 +160,15 @@ class TraceDataFrame(AbstractProjectDataFrame):
         :param score: The score of the generated link.
         :param explanation: Explanation for generated trace link.
         :param relationship_type: The type of relationship between the artifacts.
+        :param color: The color to display the link as.
         :return: A dictionary mapping column names to the corresponding link information
         """
         relationship_type = relationship_type
         dict_ = {TraceKeys.LINK_ID: link_id} if link_id else {}
         dict_.update({TraceKeys.SOURCE: source_id, TraceKeys.TARGET: target_id,
                       TraceKeys.LABEL: label, TraceKeys.SCORE: score, TraceKeys.EXPLANATION: explanation,
-                      TraceKeys.RELATIONSHIP_TYPE: relationship_type})
+                      TraceKeys.RELATIONSHIP_TYPE: relationship_type,
+                      TraceKeys.COLOR: color})
         return EnumDict(dict_)
 
     @staticmethod

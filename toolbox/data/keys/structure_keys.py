@@ -24,6 +24,7 @@ class StructuredKeys:
         SCORE = "score"
         EXPLANATION = "explanation"
         RELATIONSHIP_TYPE = "relationship_type"
+        COLOR = "color"
 
         @classmethod
         def parent_label(cls) -> "Trace":

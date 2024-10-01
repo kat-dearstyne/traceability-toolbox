@@ -14,3 +14,5 @@ class Trace(TypedEnumDict, keys=TraceKeys):
     score: Optional[float]
     label: Optional[int]
     explanation: Optional[str]
+    relationship_type: Optional[str]
+    color: Optional[str]

@@ -107,6 +107,10 @@ class SafaExporter(AbstractDatasetExporter):
                 }
                 score = DataFrameUtil.get_optional_value_from_df(trace_row, TraceKeys.SCORE.value)
                 label = DataFrameUtil.get_optional_value_from_df(trace_row, TraceKeys.LABEL.value)
+                if relationship_type := DataFrameUtil.get_optional_value_from_df(trace_row, TraceKeys.RELATIONSHIP_TYPE):
+                    trace_entry["relationshipType"] = relationship_type
+                if color := DataFrameUtil.get_optional_value_from_df(trace_row, TraceKeys.COLOR):
+                    trace_entry["color"] = color
                 if score:
                     trace_entry["traceType"] = "GENERATED"
                     trace_entry["approvalStatus"] = "UNREVIEWED"
