@@ -26,7 +26,7 @@ class CreateEmbeddings(AbstractPipelineStep):
             embeddings_manager.update_or_add_contents(artifact_map)
         else:
             embeddings_manager = EmbeddingsManager(content_map=artifact_map, model_name=args.embedding_model)
-        embeddings_manager.create_embedding_map(include_ids=True)
+        embeddings_manager.create_embedding_map(include_ids=args.include_ids_in_embeddings)
 
         state.embedding_manager = embeddings_manager
 

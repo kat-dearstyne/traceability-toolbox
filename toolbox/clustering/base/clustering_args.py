@@ -51,6 +51,7 @@ class ClusteringArgs(Args):
     save_initial_clusters: bool = False
     metric_to_order_clusters: str = DEFAULT_SORT_METRIC
     use_ids_as_content: bool = False
+    include_ids_in_embeddings: bool = True
 
     def __post_init__(self) -> None:
         """

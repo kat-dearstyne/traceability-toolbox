@@ -31,7 +31,7 @@ class PromptBuilder:
         self._create_config()
         self.id = str(uuid.uuid4())
 
-    def build(self, model_format_args: LLMPromptBuildArgs, correct_completion: Any = EMPTY_STRING,
+    def build(self, model_format_args: LLMPromptBuildArgs = None, correct_completion: Any = EMPTY_STRING,
               **prompt_kwargs) -> EnumDict[str, str]:
         """
         Generates the prompt and response
@@ -39,6 +39,7 @@ class PromptBuilder:
         :param correct_completion: The correct completion that the model should produce
         :return: Dictionary containing the prompt and completion
         """
+        model_format_args = model_format_args if model_format_args else LLMPromptBuildArgs()
         format_vars = {key: val[self._n_built] for key, val in self.format_variables.items() if len(val) > self._n_built}
         prompt_kwargs.update(format_vars)
         build_all = not model_format_args.build_system_prompts

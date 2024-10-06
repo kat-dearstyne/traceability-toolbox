@@ -1,6 +1,5 @@
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional, Tuple, Union
-from pydantic.v1.main import BaseModel
+from typing import Any, Dict, List, Optional, Tuple, Union, Type
 
 from toolbox.constants.symbol_constants import EMPTY_STRING, NEW_LINE
 from toolbox.data.dataframes.prompt_dataframe import PromptDataFrame
@@ -44,7 +43,7 @@ class LLMTrainer:
                            datasets: Union[List[iDataset], iDataset] = None,
                            message_prompts: List[str] = None,
                            system_prompts: List[str] = None,
-                           tools: List[dict | BaseTool]  = None,
+                           tools: List[dict | Type[BaseTool]] = None,
                            save_and_load_path: str = EMPTY_STRING,
                            raise_exception: bool = True) -> TracePredictionOutput:
         """
@@ -109,10 +108,11 @@ class LLMTrainer:
     @staticmethod
     def predict_from_prompts(llm_manager: AbstractLLMManager,
                              prompt_builders: Union[PromptBuilder, List[PromptBuilder]] = None,
-                             message_prompts: List[Prompt] = None,
-                             system_prompts: List[Prompt] = None,
+                             message_prompts: List[str] = None,
+                             system_prompts: List[str] = None,
                              save_and_load_path: str = EMPTY_STRING,
                              raise_exception: bool = True,
+                             tools: List[dict | Type[BaseTool]] = None,
                              **prompt_kwargs) -> TracePredictionOutput:
         """
         Makes generation predictions from a list of prompts
@@ -123,6 +123,7 @@ class LLMTrainer:
         :param save_and_load_path: Path used to load or save predictions
         :param raise_exception: If True, raises an exception if a response fails
         :param prompt_kwargs: Additional arguments used when building prompts (optionally)
+         :param tools: The tools available to the model.
         :return: The output from the predictions
         """
         if not isinstance(prompt_builders, list):
@@ -134,7 +135,7 @@ class LLMTrainer:
         if not system_prompts:
             system_prompts = [None for _ in message_prompts]
 
-        prompt_builder_ids = [pb.id for pb in prompt_builders]
+        prompt_builder_ids = [pb.id if pb else None for pb in prompt_builders]
         if len(prompt_builder_ids) != len(message_prompts):
             assert len(prompt_builder_ids) == 1, "Mismatch between # of prompts and builders"
             prompt_builder_ids = [prompt_builder_ids[0] for _ in message_prompts]
@@ -151,7 +152,8 @@ class LLMTrainer:
         return trainer.perform_prediction(save_and_load_path=save_and_load_path,
                                           raise_exception=raise_exception,
                                           message_prompts=list(prompt_df[PromptKeys.PROMPT]),
-                                          system_prompts=system_prompts)
+                                          system_prompts=system_prompts,
+                                          tools=tools)
 
     def cleanup(self) -> None:
         """
@@ -165,7 +167,7 @@ class LLMTrainer:
                                  message_prompts: Union[str, List], system_prompts: Union[str, List] = None,
                                  completion_type: LLMCompletionType = LLMCompletionType.GENERATION,
                                  raise_exception: bool = False,
-                                 tools: List[dict | BaseTool] = None,
+                                 tools: List[dict | Type[BaseTool]] = None,
                                  save_and_load_path: str = None) -> Union[ClassificationResponse, GenerationResponse]:
         """
         Makes a request to the llm manager to generate a response.
@@ -237,7 +239,7 @@ class LLMTrainer:
                 if isinstance(r, dict) and (tool := tools.get(r.get("name"))):
                     r.pop("name")
                     pred = tool(**r)
-                else:
+                elif isinstance(prompt_builder_map[p_id], PromptBuilder):
                     pred = prompt_builder_map[p_id].parse_responses(r) if not isinstance(r, Exception) else r
             except Exception as e:
                 print(f"Unable to parse response: r:{r}")

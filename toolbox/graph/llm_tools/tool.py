@@ -104,12 +104,12 @@ class BaseTool(BaseModel):
             tool['input_schema']['required'] = required
         return tool
 
-    @abstractmethod
     def update_state(self, state: GraphState) -> None:
         """
         Updates the state with the response information.
         :param state: The state.
         """
+        raise NotImplementedError("In order to use this in Langgraph framework, this method must be implemented.")
 
     @classmethod
     def get_description(cls) -> str:

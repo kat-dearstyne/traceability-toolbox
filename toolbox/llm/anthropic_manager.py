@@ -167,7 +167,8 @@ class AnthropicManager(AbstractLLMManager[AnthropicResponse]):
         :return: The LLM response or the error msg if exception occurred
         """
         if hasattr(res, "content"):
-            content = res.content[0]
+            tool_use = [m for m in res.content if isinstance(m, ToolUseBlock)]
+            content = res.content[0] if len(tool_use) < 1 else tool_use[0]
             if isinstance(content, ToolUseBlock):
                 return {"name": content.name, **content.input}
             else:
