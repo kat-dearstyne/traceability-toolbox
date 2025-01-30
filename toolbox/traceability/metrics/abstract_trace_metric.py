@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
 import datasets
-from datasets import MetricInfo
-from evaluate import EvaluationModule
+from evaluate.info import EvaluationModuleInfo
+from evaluate.module import EvaluationModule
 
 from toolbox.infra.base_object import BaseObject
 
@@ -10,7 +10,7 @@ from toolbox.infra.base_object import BaseObject
 class AbstractTraceMetric(EvaluationModule, BaseObject, ABC):
 
     @abstractmethod
-    def _info(self) -> MetricInfo:
+    def _info(self) -> EvaluationModuleInfo:
         """
         Throws error if called. Should be implemented by child class.
         :return: None

@@ -1,6 +1,7 @@
 from typing import Dict, List
 
 import datasets
+from evaluate.info import EvaluationModuleInfo
 
 from toolbox.constants.metric_constants import THRESHOLD_DEFAULT
 from toolbox.traceability.metrics.abstract_trace_metric import AbstractTraceMetric
@@ -72,12 +73,12 @@ class ConfusionMatrixAtThresholdMetric(AbstractTraceMetric):
                     errors[ErrorLabel.FN] += 1
         return dict(errors)
 
-    def _info(self) -> datasets.MetricInfo:
+    def _info(self) -> EvaluationModuleInfo:
         """
         Information relating to the metric
         :return: the MetricInfo object containing metric information
         """
-        return datasets.MetricInfo(
+        return EvaluationModuleInfo(
             description=_DESCRIPTION,
             citation=_CITATION,
             inputs_description=_KWARGS_DESCRIPTION,

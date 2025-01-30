@@ -1,7 +1,7 @@
 import json
 from typing import List, Set
 
-from pydantic.v1.main import Field
+from pydantic.fields import Field
 
 from toolbox.graph.io.graph_state import GraphState
 from toolbox.graph.llm_tools.tool import BaseTool

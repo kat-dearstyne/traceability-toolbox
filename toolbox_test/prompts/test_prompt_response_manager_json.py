@@ -1,7 +1,8 @@
 import json
+from dataclasses import Field
 from typing import List
 
-from pydantic.v1.main import BaseModel, Field
+from pydantic.main import BaseModel
 
 from toolbox.llm.response_managers.abstract_response_manager import USE_ALL_TAGS
 from toolbox.llm.response_managers.json_response_manager import JSONResponseManager

@@ -1,7 +1,7 @@
 import inspect
 from typing import List, Set, Type
 
-from datasets import Metric, list_metrics
+from evaluate.module import EvaluationModule
 
 from toolbox.traceability.metrics.abstract_trace_metric import AbstractTraceMetric
 from toolbox.traceability.metrics.average_true_links_metrics import AverageTrueLinksMetric
@@ -15,6 +15,7 @@ from toolbox.traceability.metrics.precision_at_recall_metric import PrecisionAtR
 from toolbox.traceability.metrics.precision_at_threshold_metric import PrecisionAtKMetric
 from toolbox.traceability.metrics.specificity_metric import SpecificityMetric
 from toolbox.util.supported_enum import SupportedEnum
+import evaluate
 
 metric_suffix = "Metric"
 
@@ -59,14 +60,14 @@ def get_metric_path(metric_name: str) -> str:
         trace_metric_class = SupportedTraceMetric[metric_name.upper()].value
         path = _get_metric_path_from_class(trace_metric_class)
     except KeyError:
-        if metric_name.lower() in list_metrics():
+        if metric_name.lower() in evaluate.list_evaluation_modules():
             path = metric_name
         else:
             raise NameError(f"Metric %s is unknown: `{metric_name}`")
     return path
 
 
-def get_metric_name(metric_class: Metric) -> str:
+def get_metric_name(metric_class: EvaluationModule) -> str:
     """
     Gets the metric name from its class
     :param metric_class: the class of the metric

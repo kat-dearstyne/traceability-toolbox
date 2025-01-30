@@ -1,6 +1,7 @@
 from typing import Dict
 
 import datasets
+from evaluate.info import EvaluationModuleInfo
 from sklearn.metrics import average_precision_score
 
 from toolbox.constants.metric_constants import AP_KEY, MAP_KEY, THRESHOLD_DEFAULT
@@ -49,12 +50,12 @@ class MapMetric(AbstractTraceMetric):
             AP_KEY: ap_score
         }
 
-    def _info(self) -> datasets.MetricInfo:
+    def _info(self) -> EvaluationModuleInfo:
         """
         Information relating to the metric
         :return: the MetricInfo object containing metric information
         """
-        return datasets.MetricInfo(
+        return EvaluationModuleInfo(
             description=_DESCRIPTION,
             citation=_CITATION,
             inputs_description=_KWARGS_DESCRIPTION,

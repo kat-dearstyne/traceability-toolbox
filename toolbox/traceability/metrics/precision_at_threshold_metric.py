@@ -1,6 +1,7 @@
 from typing import Dict
 
 import datasets
+from evaluate.info import EvaluationModuleInfo
 from sklearn.metrics import precision_score
 
 from toolbox.constants.metric_constants import K_METRIC_DEFAULT
@@ -56,12 +57,12 @@ class PrecisionAtKMetric(AbstractTraceMetric):
             results[metric_name] = round(score, 3)
         return results
 
-    def _info(self) -> datasets.MetricInfo:
+    def _info(self) -> EvaluationModuleInfo:
         """
         Information relating to the metric
         :return: the MetricInfo object containing metric information
         """
-        return datasets.MetricInfo(
+        return EvaluationModuleInfo(
             description=_DESCRIPTION,
             citation=_CITATION,
             inputs_description=_KWARGS_DESCRIPTION,

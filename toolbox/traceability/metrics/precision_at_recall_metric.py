@@ -1,6 +1,7 @@
 from typing import Dict
 
 import datasets
+from evaluate.info import EvaluationModuleInfo
 from sklearn.metrics import precision_recall_curve
 
 from toolbox.constants.metric_constants import THRESHOLD_DEFAULT, UPPER_RECALL_THRESHOLD
@@ -55,12 +56,12 @@ class PrecisionAtRecallMetric(AbstractTraceMetric):
             logger.warning(f"Could not find threshold under {UPPER_RECALL_THRESHOLD} recall.")
         return {"precision_at_recall": max_precision, "best_threshold": threshold}
 
-    def _info(self) -> datasets.MetricInfo:
+    def _info(self) -> EvaluationModuleInfo:
         """
         Information relating to the metric
         :return: the MetricInfo object containing metric information
         """
-        return datasets.MetricInfo(
+        return EvaluationModuleInfo(
             description=_DESCRIPTION,
             citation=_CITATION,
             inputs_description=_KWARGS_DESCRIPTION,

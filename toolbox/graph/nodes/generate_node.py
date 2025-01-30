@@ -1,6 +1,6 @@
 from typing import List
 
-from pydantic.v1.main import BaseModel
+from pydantic.main import BaseModel
 
 from toolbox.constants.symbol_constants import NEW_LINE
 from toolbox.graph.agents.base_agent import BaseAgent

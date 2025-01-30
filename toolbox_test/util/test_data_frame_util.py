@@ -53,7 +53,7 @@ class TestDataFrameUtil(BaseTest):
         """
         Tests the correctness of the get optional value method.
         """
-        entry = {"A": 1, "B": "HI", "C": np.NAN, "D": ""}
+        entry = {"A": 1, "B": "HI", "C": np.nan, "D": ""}
         df = pd.DataFrame([entry])
 
         def assert_value(key_name: str, v: Any, **kwargs):
@@ -86,6 +86,6 @@ class TestDataFrameUtil(BaseTest):
 
     def test_find_nan_empty_indices(self):
         expected_empty_indices = [2, 4, 5]
-        df = pd.DataFrame({"column": [1, 2, np.NaN, 3, "", None]})
+        df = pd.DataFrame({"column": [1, 2, np.nan, 3, "", None]})
         empty_indices = DataFrameUtil.find_nan_empty_indices(df["column"])
         self.assertListEqual(expected_empty_indices, empty_indices)

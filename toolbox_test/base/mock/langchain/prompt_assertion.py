@@ -1,6 +1,6 @@
 from typing import Callable, List, Type, Dict, Optional
 
-from pydantic.v1.main import BaseModel
+from pydantic.main import BaseModel
 
 from toolbox_test.base.tests.base_test import BaseTest
 

@@ -2,6 +2,7 @@ from typing import Dict
 
 import datasets
 import numpy as np
+from evaluate.module import EvaluationModuleInfo
 
 from toolbox.data.tdatasets.trace_matrix import TraceMatrix
 from toolbox.traceability.metrics.abstract_trace_metric import AbstractTraceMetric
@@ -52,12 +53,12 @@ class AverageTrueLinksMetric(AbstractTraceMetric):
             "avg_true_links": score
         }
 
-    def _info(self) -> datasets.MetricInfo:
+    def _info(self) -> EvaluationModuleInfo:
         """
         Information relating to the metric
         :return: the MetricInfo object containing metric information
         """
-        return datasets.MetricInfo(
+        return EvaluationModuleInfo(
             description=_DESCRIPTION,
             citation=_CITATION,
             inputs_description=_KWARGS_DESCRIPTION,

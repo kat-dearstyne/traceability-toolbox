@@ -1,6 +1,7 @@
 from typing import Dict
 
 import datasets
+from evaluate.info import EvaluationModuleInfo
 
 from toolbox.traceability.metrics.abstract_trace_metric import AbstractTraceMetric
 from toolbox.traceability.metrics.confusion_matrix_at_threshold_metric import ConfusionMatrixAtThresholdMetric
@@ -35,12 +36,12 @@ class SpecificityMetric(AbstractTraceMetric):
         matrix: Dict = ConfusionMatrixAtThresholdMetric()._compute(predictions, references, **kwargs)
         return matrix["tn"] / (matrix["tn"] + matrix["fp"])
 
-    def _info(self) -> datasets.MetricInfo:
+    def _info(self) -> EvaluationModuleInfo:
         """
         Information relating to the metric
         :return: the MetricInfo object containing metric information
         """
-        return datasets.MetricInfo(
+        return EvaluationModuleInfo(
             description=_DESCRIPTION,
             citation=_CITATION,
             inputs_description=_KWARGS_DESCRIPTION,

@@ -1,6 +1,7 @@
 from typing import Dict
 
 import datasets
+from evaluate.module import EvaluationModuleInfo
 from sklearn.metrics import fbeta_score, precision_score, recall_score
 
 from toolbox.data.tdatasets.trace_matrix import TraceMatrix
@@ -47,12 +48,12 @@ class ClassificationMetrics(AbstractTraceMetric):
         metrics = {"precision": precision, "recall": recall, "f1": f1, "f2": f2}
         return metrics
 
-    def _info(self) -> datasets.MetricInfo:
+    def _info(self) -> EvaluationModuleInfo:
         """
         Information relating to the metric
         :return: the MetricInfo object containing metric information
         """
-        return datasets.MetricInfo(
+        return EvaluationModuleInfo(
             description=_DESCRIPTION,
             citation=_CITATION,
             inputs_description=_KWARGS_DESCRIPTION,

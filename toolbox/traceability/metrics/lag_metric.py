@@ -2,6 +2,7 @@ from typing import Dict, List
 
 import datasets
 import numpy as np
+from evaluate.info import EvaluationModuleInfo
 
 from toolbox.constants.metric_constants import LAG_KEY, THRESHOLD_DEFAULT
 from toolbox.data.tdatasets.trace_matrix import TraceMatrix
@@ -64,12 +65,12 @@ class LagMetric(AbstractTraceMetric):
             LAG_KEY: lag_score
         }
 
-    def _info(self) -> datasets.MetricInfo:
+    def _info(self) -> EvaluationModuleInfo:
         """
         Information relating to the metric
         :return: the MetricInfo object containing metric information
         """
-        return datasets.MetricInfo(
+        return EvaluationModuleInfo(
             description=_DESCRIPTION,
             citation=_CITATION,
             inputs_description=_KWARGS_DESCRIPTION,

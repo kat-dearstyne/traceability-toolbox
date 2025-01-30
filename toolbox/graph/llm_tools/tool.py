@@ -3,8 +3,8 @@ from enum import Enum, IntEnum, auto
 from typing import Any, Callable, Dict, Type
 
 from langchain_core.tools import BaseTool
-from pydantic.v1.fields import FieldInfo
-from pydantic.v1.main import BaseModel
+from pydantic.fields import FieldInfo
+from pydantic.main import BaseModel
 
 from toolbox.constants.symbol_constants import BRACKET_CLOSE, BRACKET_OPEN, DASH, SQ_BRACKET_CLOSE, SQ_BRACKET_OPEN
 from toolbox.graph.io.graph_state import GraphState
@@ -60,10 +60,9 @@ class BaseTool(BaseModel):
         :param state: The current state of the gr                                               aph.
         :return: The schema of the tool.
         """
-        schema = cls.schema()
-        for name, val in cls.__fields__.items():
-            if isinstance(val.field_info, DynamicEnumFieldInfo):
-                field_info = val.field_info
+        schema = cls.model_json_schema()
+        for name, field_info in cls.model_fields.items():
+            if isinstance(field_info, DynamicEnumFieldInfo):
                 assert field_info.state_var in state, f"Cannot update field because state does not contain {field_info.state_var}"
                 state_value = state.get(field_info.state_var)
                 enum_id = DASH.join(state_value)

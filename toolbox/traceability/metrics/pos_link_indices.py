@@ -3,6 +3,7 @@ from typing import Dict
 import datasets
 import numpy as np
 import pandas as pd
+from evaluate.info import EvaluationModuleInfo
 
 from toolbox.data.tdatasets.trace_matrix import TraceMatrix
 from toolbox.traceability.metrics.abstract_trace_metric import AbstractTraceMetric
@@ -44,7 +45,7 @@ class PositiveLinkIndices(AbstractTraceMetric):
             :return: Dictionary containing indices of positive predictions.
             """
             if 1 not in labels:
-                return np.NAN
+                return np.nan
             zipped_list = list(zip(labels, preds))
             sorted_list = sorted(zipped_list, key=lambda x: x[1], reverse=True)
             sorted_labels, sorted_predictions = zip(*sorted_list)
@@ -61,11 +62,11 @@ class PositiveLinkIndices(AbstractTraceMetric):
             "index_histogram": avg_positive_link_index
         }
 
-    def _info(self) -> datasets.MetricInfo:
+    def _info(self) -> EvaluationModuleInfo:
         """
         :return: The metric information.
         """
-        return datasets.MetricInfo(
+        return EvaluationModuleInfo(
             description=_DESCRIPTION,
             citation=_CITATION,
             inputs_description=_KWARGS_DESCRIPTION,

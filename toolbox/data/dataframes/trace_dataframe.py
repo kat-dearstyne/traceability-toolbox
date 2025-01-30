@@ -22,8 +22,8 @@ class TraceDataFrame(AbstractProjectDataFrame):
                         StructuredKeys.Trace.COLOR.value]
     DEFAULT_FOR_OPTIONAL_COLS = EnumDict({StructuredKeys.Trace.RELATIONSHIP_TYPE: TraceRelationshipType.TRACEABILITY,
                                           StructuredKeys.Trace.COLOR: EMPTY_STRING,
-                                          StructuredKeys.Trace.LABEL.value: np.NAN,
-                                          StructuredKeys.Trace.SCORE.value: np.NAN,
+                                          StructuredKeys.Trace.LABEL.value: np.nan,
+                                          StructuredKeys.Trace.SCORE.value: np.nan,
                                           StructuredKeys.Trace.EXPLANATION.value: None})
 
     def __init__(self, *args, **kwargs):

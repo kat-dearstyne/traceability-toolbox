@@ -5,7 +5,7 @@ from unittest import TestCase
 
 import mock
 import pandas as pd
-from datasets import set_caching_enabled
+from datasets.fingerprint import disable_caching
 from transformers import AutoModelForSequenceClassification
 from transformers.models.bert.configuration_bert import BertConfig
 from transformers.models.bert.tokenization_bert import BertTokenizer
@@ -59,7 +59,7 @@ class BaseTest(TestCase):
         RandomUtil.set_seed(42)
         cache_dir = HF_DATASETS_CACHE
         if cache_dir is None:
-            set_caching_enabled(False)
+            disable_caching()
         if BaseTest.configure_logging:
             config = LoggerConfig(output_dir=toolbox_TEST_OUTPUT_PATH)
             LoggerManager.configure_logger(config)

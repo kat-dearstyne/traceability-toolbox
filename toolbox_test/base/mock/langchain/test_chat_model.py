@@ -6,8 +6,8 @@ from anthropic.types.text_block import TextBlock
 from anthropic.types.tool_use_block import ToolUseBlock
 from anthropic.types.usage import Usage
 from langchain_anthropic.chat_models import ChatAnthropic
-from langchain_core.pydantic_v1 import root_validator
-from pydantic.v1.main import BaseModel
+from pydantic.functional_validators import model_validator
+from pydantic.main import BaseModel
 
 from toolbox.constants.symbol_constants import EMPTY_STRING, NEW_LINE
 from toolbox.graph.io.graph_state_vars import GraphStateVars
@@ -108,16 +108,17 @@ class FakeClaude:
 class TestChatModel(ChatAnthropic):
     responses: RESPONSE_TYPE | MULTI_RUN_RESPONSE_TYPE
 
-    @root_validator()
+    @model_validator(mode="after")
+    @classmethod
     def validate_environment(cls, values: Dict) -> Dict:
         """
         Overwrites the client to use fake claude.
         :param values: The input values to the model.
         :return: The updated values.
         """
-        values = super().validate_environment(values)
-        values["_client"] = FakeClaude(values["model"], values["responses"])
-        values["_async_client"] = FakeClaude(values["model"], values["responses"], run_async=True)
+        # values = super().validate_environment(values)
+        values._client = FakeClaude(values.model, values.responses)
+        values._async_client = FakeClaude(values.model, values.responses, run_async=True)
         return values
 
 

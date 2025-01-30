@@ -1,7 +1,7 @@
 from typing import List
 
-from pydantic.v1.fields import Field
-from pydantic.v1.main import BaseModel
+from pydantic.fields import Field
+from pydantic.main import BaseModel
 
 from toolbox.graph.agents.base_agent import BaseAgent
 from toolbox.graph.branches.paths.path import Path

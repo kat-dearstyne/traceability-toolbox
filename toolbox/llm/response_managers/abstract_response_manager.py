@@ -5,7 +5,8 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Set, Tuple, Type, Union
 
 import bs4
-from langchain_core.pydantic_v1 import BaseModel, Field
+from pydantic.fields import Field
+from pydantic.main import BaseModel
 
 from toolbox.constants.symbol_constants import DASH, EMPTY_STRING
 from toolbox.infra.t_logging.logger_manager import logger
@@ -141,10 +142,10 @@ class AbstractResponseManager:
         :param additional_params: Additional params to the response manager.
         :return: The response manager based on the langgraph model.
         """
-        tags = model.__fields__
+        tags = model.model_fields
         response_manager = cls(
-            tag_descriptions={name: tag.field_info.description for name, tag in tags.items()},
-            expected_response_type={name: tag.type_ for name, tag in tags.items()},
+            tag_descriptions={name: tag.description for name, tag in tags.items()},
+            expected_response_type={name: tag.annotation for name, tag in tags.items()},
             **additional_params)
         response_manager._model = model
         return response_manager

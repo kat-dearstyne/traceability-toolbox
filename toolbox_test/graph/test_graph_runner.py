@@ -1,3 +1,4 @@
+from copy import deepcopy
 from unittest.mock import MagicMock
 
 import httpx
@@ -57,8 +58,8 @@ class TestGraphRunner(BaseTest):
     @mock_chat_model
     def test_full_generation(self, response_manager: TestResponseManager):
         first_res = RetrieveAdditionalInformation(retrieval_query="best pet")
-        second_res = ExploreArtifactNeighborhood(artifact_ids=1, artifact_types="pets")
-        third_res = ExploreArtifactNeighborhood(artifact_ids=[2, 4])
+        second_res = ExploreArtifactNeighborhood(artifact_ids="1", artifact_types="pets")
+        third_res = ExploreArtifactNeighborhood(artifact_ids=["2", '4'])
         repeat_res = RetrieveAdditionalInformation(retrieval_query="best pet")
         final_res = GenerateNode(self.get_args()).get_agent().create_response_obj([self.ANSWER, self.REFERENCE_IDS])
         response_manager.set_responses([first_res, second_res, third_res, repeat_res, final_res])
@@ -76,8 +77,8 @@ class TestGraphRunner(BaseTest):
     @mock_chat_model
     def test_run_multi(self, response_manager: TestResponseManager, anthropicResponseManager: TestAIManager):
         first_res = RetrieveAdditionalInformation(retrieval_query="best pet")
-        second_res = ExploreArtifactNeighborhood(artifact_ids=1, artifact_types="pets")
-        third_res = ExploreArtifactNeighborhood(artifact_ids=[2, 4])
+        second_res = ExploreArtifactNeighborhood(artifact_ids="1", artifact_types="pets")
+        third_res = ExploreArtifactNeighborhood(artifact_ids=["2", "4"])
         repeat_res = RetrieveAdditionalInformation(retrieval_query="best pet")
         final_res = GenerateNode(self.get_args()).get_agent().create_response_obj([self.ANSWER, self.REFERENCE_IDS])
         request_assistance = RequestAssistance()
@@ -102,6 +103,9 @@ class TestGraphRunner(BaseTest):
         self.assertEqual(answer_obj.answer, self.ANSWER)
         self.assertListEqual(answer_obj.reference_ids, self.REFERENCE_IDS)
 
+        # [START, generate_node, retrieve_node, generate_node, explore_node, generate_node, explore_node, generate_node,
+        # generate_node, continue_node]
+
         assistance_obj = outputs[1]
         self.assertEqual(assistance_obj.relevant_information_learned, request_assistance.relevant_information_learned)
 
@@ -120,7 +124,7 @@ class TestGraphRunner(BaseTest):
     @mock_chat_model
     def test_with_failure(self, response_manager: TestResponseManager):
         first_res = RetrieveAdditionalInformation(retrieval_query="best pet")
-        second_res = ExploreArtifactNeighborhood(artifact_ids=1, artifact_types="pets")
+        second_res = ExploreArtifactNeighborhood(artifact_ids="1", artifact_types="pets")
         response_manager.set_responses([first_res, second_res, first_res, second_res, "I dont know"])
         answer_obj, runner = self.run_chat_test(response_manager)
         self.assertIsNone(answer_obj)
@@ -140,11 +144,13 @@ class TestGraphRunner(BaseTest):
         retrieve_node = SupportedNodes.RETRIEVE.name
         explore_node = SupportedNodes.EXPLORE_NEIGHBORS.name
         continue_node = SupportedNodes.CONTINUE.name
-        self.assertListEqual(runner.nodes_visited_on_runs[run_num],
+        nodes_visited = deepcopy(runner.nodes_visited_on_runs[run_num])
+        nodes_visited.reverse()
+        self.assertListEqual(nodes_visited,
                              [START, generate_node, retrieve_node, generate_node, explore_node,
                               generate_node, explore_node, generate_node,
                               generate_node, continue_node])
-        self.assertEqual(runner.states_for_runs[run_num][-1]['generation'], self.ANSWER)
+        self.assertEqual(runner.states_for_runs[run_num][0]['generation'], self.ANSWER)
 
     def run_chat_test(self, response_manager: TestResponseManager):
         args = self.get_args()
