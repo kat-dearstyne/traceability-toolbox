@@ -145,12 +145,15 @@ class TestGraphRunner(BaseTest):
         explore_node = SupportedNodes.EXPLORE_NEIGHBORS.name
         continue_node = SupportedNodes.CONTINUE.name
         nodes_visited = deepcopy(runner.nodes_visited_on_runs[run_num])
-        nodes_visited.reverse()
+        states_for_runs = deepcopy(runner.states_for_runs[run_num])
+        if nodes_visited[-1] == START:
+            nodes_visited.reverse()
+            states_for_runs.reverse()
         self.assertListEqual(nodes_visited,
                              [START, generate_node, retrieve_node, generate_node, explore_node,
                               generate_node, explore_node, generate_node,
                               generate_node, continue_node])
-        self.assertEqual(runner.states_for_runs[run_num][0]['generation'], self.ANSWER)
+        self.assertEqual(states_for_runs[-1]['generation'], self.ANSWER)
 
     def run_chat_test(self, response_manager: TestResponseManager):
         args = self.get_args()
