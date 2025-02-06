@@ -421,3 +421,12 @@ class ReflectionUtil:
         module_path = obj.__module__
         qual_name = obj.__qualname__
         return PERIOD.join([module_path, qual_name])
+
+    @staticmethod
+    def get_public_fields(obj: Any) -> Dict:
+        """
+        Gets all public fields in the object.
+        :param obj: Object to get public field, value pairs from.
+        :return: Vars dictionary with only public fields.
+        """
+        return {k: v for k, v in vars(obj).items() if not k.startswith("_")}
