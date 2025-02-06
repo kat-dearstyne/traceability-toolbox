@@ -63,12 +63,11 @@ class AbstractLLMManager(BaseObject, ABC, Generic[AIObject]):
 
         retries = self._get_indices_to_retry(original_responses, n_expected=len(prompts))
 
-        global_state: MultiThreadState = self.make_completion_request_impl(raise_exception=raise_exception,
+        llm_response = self.make_completion_request_impl(raise_exception=raise_exception,
                                                                            original_responses=original_responses,
                                                                            retries=retries,
                                                                            prompt=prompts,
                                                                            **completion_params)
-        llm_response = global_state.results
         translated_response = self.translate_to_response(completion_type, llm_response, **params)
         return translated_response
 

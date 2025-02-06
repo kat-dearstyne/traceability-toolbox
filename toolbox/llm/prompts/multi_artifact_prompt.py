@@ -1,6 +1,6 @@
 from copy import deepcopy
 from enum import Enum, auto
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from toolbox.constants.model_constants import MAX_TOKENS_FOR_NO_SUMMARIES
 from toolbox.constants.symbol_constants import EMPTY_STRING, NEW_LINE
@@ -11,7 +11,9 @@ from toolbox.llm.prompts.prompt_args import PromptArgs
 from toolbox.llm.tokens.token_calculator import TokenCalculator
 from toolbox.util.dict_util import DictUtil
 from toolbox.util.enum_util import EnumDict
+from toolbox.util.list_util import ListUtil
 from toolbox.util.override import overrides
+from toolbox.util.prompt_util import PromptUtil
 
 
 class MultiArtifactPrompt(Prompt):
@@ -26,6 +28,7 @@ class MultiArtifactPrompt(Prompt):
         XML = auto()
         NUMBERED = auto()
         MARKDOWN = auto()
+        PARENT_CHILD_BULLETS = auto()
 
     class DataType(Enum):
         TRACES = auto()
@@ -51,7 +54,8 @@ class MultiArtifactPrompt(Prompt):
         self.build_method = build_method
         self.build_methods = {self.BuildMethod.XML: self._build_as_xml,
                               self.BuildMethod.NUMBERED: self._build_as_numbered,
-                              self.BuildMethod.MARKDOWN: self._build_as_markdown}
+                              self.BuildMethod.MARKDOWN: self._build_as_markdown,
+                              self.BuildMethod.PARENT_CHILD_BULLETS: self._build_as_child_parent_bullets}
         artifact_params = DictUtil.update_kwarg_values(artifact_params, include_id=include_ids)
         self.artifact_params = artifact_params
         self.data_type = data_type
@@ -59,7 +63,7 @@ class MultiArtifactPrompt(Prompt):
         super().__init__(value=prompt_start, prompt_args=prompt_args)
 
     @overrides(Prompt)
-    def _build(self, artifacts: List[EnumDict], structure: bool = True, **kwargs) -> str:
+    def _build(self, artifacts: List[EnumDict | Tuple[EnumDict]], structure: bool = True, **kwargs) -> str:
         """
         Builds the artifacts prompt using the given build method
         :param artifacts: The list of dictionaries containing the attributes representing each artifact.
@@ -70,9 +74,10 @@ class MultiArtifactPrompt(Prompt):
         prompt = super()._build(structure=True, **kwargs)
         if self.build_method in self.build_methods:
             artifact_params = deepcopy(self.artifact_params)
-            artifact_tokens = [TokenCalculator.estimate_num_tokens(artifact[ArtifactKeys.CONTENT]) for artifact in artifacts]
-            if sum(artifact_tokens) > MAX_TOKENS_FOR_NO_SUMMARIES:
-                artifact_params = DictUtil.update_kwarg_values(artifact_params, use_summary=True)
+            if artifacts and isinstance(artifacts[0], dict) and artifacts[0].get(ArtifactKeys.SUMMARY):
+                artifact_tokens = [TokenCalculator.estimate_num_tokens(artifact[ArtifactKeys.CONTENT]) for artifact in artifacts]
+                if sum(artifact_tokens) > MAX_TOKENS_FOR_NO_SUMMARIES:
+                    artifact_params = DictUtil.update_kwarg_values(artifact_params, use_summary=True)
             artifacts = self.build_methods[self.build_method](artifacts,
                                                               starting_num=self.starting_num,
                                                               prompt=prompt,
@@ -100,7 +105,7 @@ class MultiArtifactPrompt(Prompt):
         return NEW_LINE.join(formatted_artifacts)
 
     @staticmethod
-    def _build_as_xml(artifacts: List[ArtifactPrompt], artifact_params: Dict, **kwargs):
+    def _build_as_xml(artifacts: List[EnumDict], artifact_params: Dict, **kwargs):
         """
         Formats the artifacts as follows:
         <artifact>
@@ -116,7 +121,7 @@ class MultiArtifactPrompt(Prompt):
         return NEW_LINE.join(formatted_artifacts)
 
     @staticmethod
-    def _build_as_markdown(artifacts: List[ArtifactPrompt], prompt: str, artifact_params: Dict, **kwargs):
+    def _build_as_markdown(artifacts: List[EnumDict], prompt: str, artifact_params: Dict, **kwargs):
         """
         Formats the artifacts as follows:
         # ID
@@ -131,6 +136,37 @@ class MultiArtifactPrompt(Prompt):
         artifact_prompt = ArtifactPrompt(build_method=ArtifactPrompt.BuildMethod.MARKDOWN, **artifact_params)
         formatted_artifacts = [artifact_prompt.build(artifact=artifact, header_level=header_level, **kwargs) for artifact in artifacts]
         return NEW_LINE.join(formatted_artifacts)
+
+    @staticmethod
+    def _build_as_child_parent_bullets(artifacts: List[Tuple[EnumDict]], artifact_params: Dict,
+                                       starting_bullet_level: int = 1,
+                                       **kwargs):
+        """
+        Formats the artifacts as follows:
+        * (p_id) (p_body)
+        ** (c_id) (c_body)
+        :param artifacts: The list of dictionaries containing the attributes representing each artifact
+        :param prompt: Determines header level. 1 if prompt not defined and 2 otherwise.
+        :param artifact_params: The parameters to pass into artifact prompt construction.
+        :param include_ids: If True, includes artifact ids
+        :return: The formatted prompt
+        """
+        include_id = DictUtil.get_dict_values(artifact_params, include_id=True)
+        child_params = DictUtil.update_kwarg_values(artifact_params, make_copy=True,
+                                                    replace_existing=True,
+                                                    include_id=DictUtil.get_dict_values(artifact_params, use_child_id=include_id,
+                                                                                        pop=True))
+        parent_params = DictUtil.update_kwarg_values(artifact_params, make_copy=True,
+                                                     include_id=DictUtil.get_dict_values(artifact_params, use_parent_id=include_id,
+                                                                                         pop=True))
+
+        parent_prompt = ArtifactPrompt(build_method=ArtifactPrompt.BuildMethod.BULLET, **parent_params)
+        child_prompt = ArtifactPrompt(build_method=ArtifactPrompt.BuildMethod.BULLET, **child_params)
+
+        formatted_artifacts = [[parent_prompt.build(artifact=parent, bullet_level=starting_bullet_level, **kwargs),
+                                child_prompt.build(artifact=child, bullet_level=starting_bullet_level+1, **kwargs)]
+                               for (parent, child) in artifacts]
+        return NEW_LINE.join(ListUtil.flatten(formatted_artifacts))
 
     def __repr__(self) -> str:
         """

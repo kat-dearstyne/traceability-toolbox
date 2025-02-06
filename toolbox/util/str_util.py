@@ -52,8 +52,21 @@ class StrUtil:
         try:
             string = string.format(*updated_args, **updated_kwargs)
         except Exception:
+            string = StrUtil.fallback_formatting(string, **updated_kwargs)
             logger.exception(f"Unable to format {string} with args={updated_args} and kwargs={updated_kwargs}")
         return string
+
+    @staticmethod
+    def fallback_formatting(string: str, *updated_args, **updated_kwargs) -> str:
+        """
+        Formats the given string using the kwargs if the string.format fails.
+        :return: String with format values replacing placeholders.
+        """
+        if updated_kwargs:
+            for key, val in updated_kwargs.items():
+                string = string.replace(StrUtil.get_format_symbol(key), val)
+        return string
+
 
     @staticmethod
     def find_format_fields(input_string: str) -> List[str]:

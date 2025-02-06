@@ -1,3 +1,4 @@
+from copy import deepcopy
 from enum import Enum
 from typing import Any, Callable, Dict, Iterable, List, Set, Tuple, Type, TypeVar, Union
 
@@ -172,14 +173,16 @@ class DictUtil:
         return values[0] if len(values) == 1 else values
 
     @staticmethod
-    def update_kwarg_values(orig_kwargs: Dict, replace_existing: bool = True, **new_kwargs) -> Dict:
+    def update_kwarg_values(orig_kwargs: Dict, replace_existing: bool = True, make_copy: bool = False, **new_kwargs) -> Dict:
         """
         Gets all kwargs values for the given keys
         :param orig_kwargs: The kwargs to add to
         :param new_kwargs: Additional kwargs to add
         :param replace_existing: If True, overwrites an existing kwargs if it exists in the new kwargs
+        :param make_copy: If True, copies kwargs instead of modifying.
         :return: The updated kwargs
         """
+        orig_kwargs = deepcopy(orig_kwargs) if make_copy else orig_kwargs
         for key, val in new_kwargs.items():
             if replace_existing or key not in orig_kwargs:
                 orig_kwargs[key] = val

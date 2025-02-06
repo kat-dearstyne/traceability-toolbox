@@ -37,7 +37,7 @@ class OpenAIManager(AbstractLLMManager[AttrDict]):
         logger.info(f"Created OpenAI manager with Model: {self.llm_args.model}")
 
     def make_completion_request_impl(self, raise_exception: bool = True, original_responses: List = None,
-                                     retries: Set[int] = None, **params) -> AIObject:
+                                     retries: Set[int] = None, **params) -> List:
         """
         Makes a request to completion a model
         :param raise_exception: If True, raises an exception if the request has failed.
@@ -74,8 +74,8 @@ class OpenAIManager(AbstractLLMManager[AttrDict]):
         global_responses = global_state.results
         if retries:
             global_responses = self._combine_original_responses_and_retries(global_responses, original_responses, retries)
-        global_state.results = Res(choices=global_responses)
-        return global_state
+        results = Res(choices=global_responses)
+        return results
 
     @staticmethod
     def translate_to_response(task: LLMCompletionType, res: AttrDict, **params) -> SupportedLLMResponses:

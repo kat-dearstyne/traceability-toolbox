@@ -27,6 +27,7 @@ class ArtifactPrompt(Prompt):
         MARKDOWN = auto()
         XML = auto()
         BASE = auto()
+        BULLET = auto()
 
     def __init__(self, prompt_start: str = EMPTY_STRING, prompt_args: PromptArgs = None, build_method: BuildMethod = BuildMethod.BASE,
                  include_id: bool = True, xml_tags: Dict[str, List[str]] = None, use_summary: bool = True):
@@ -44,7 +45,8 @@ class ArtifactPrompt(Prompt):
         self.build_methods = {
             self.BuildMethod.XML: self._build_as_xml,
             self.BuildMethod.BASE: self._build_as_base,
-            self.BuildMethod.MARKDOWN: self._build_as_markdown
+            self.BuildMethod.MARKDOWN: self._build_as_markdown,
+            self.BuildMethod.BULLET: self._build_as_bullet
         }
         self.use_summary = use_summary
         self.include_id = include_id
@@ -142,6 +144,22 @@ class ArtifactPrompt(Prompt):
             header += f" ({kwargs[ArtifactKeys.LAYER_ID.value]})"
         content = PromptUtil.indent_for_markdown(artifact_body, level=2)
         return f"{header}{NEW_LINE}{content}" if header else content
+
+    @staticmethod
+    def _build_as_bullet(artifact_id: Union[int, str], artifact_body: str, include_id: bool = True,
+                         bullet_level: int = 1, **kwargs) -> str:
+        """
+        Formats the artifact as follows:
+        * (id) body
+        :param artifact_id: The id of the artifact
+        :param artifact_body: The body of the artifact
+        :param include_id: Whether to include id or not
+        :param bullet_level: The bullet level used to print each artifact.
+        :return: The formatted prompt
+        """
+        content = f"({artifact_id}) " if include_id else ""
+        content = PromptUtil.as_bullet_point(content + artifact_body, level=bullet_level)
+        return content
 
     @staticmethod
     def _build_as_base(artifact_id: Union[int, str], artifact_body: str, include_id: bool = True, **kwargs) -> str:

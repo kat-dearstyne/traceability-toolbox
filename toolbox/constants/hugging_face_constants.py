@@ -34,5 +34,7 @@ DEFAULT_EVAL_METRIC = "f2"
 DEFAULT_MAX_STEPS_BEFORE_EVAL = 50
 DEFAULT_SAVE_BEST_MODEL = True
 DEFAULT_ENCODING_BATCH_SIZE = 32
+HG_MAX_RPM = 10000
+HG_MAX_TRIES = 3
 TracePredictions = Union[np.ndarray, Tuple[np.ndarray], List]
 Metrics = Dict[str, float]

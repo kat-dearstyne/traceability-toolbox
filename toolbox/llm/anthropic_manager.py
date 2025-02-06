@@ -68,7 +68,7 @@ class AnthropicManager(AbstractLLMManager[AnthropicResponse]):
         super().__init__(llm_args=llm_args, prompt_args=self.prompt_args)
 
     def make_completion_request_impl(self, raise_exception: bool = True, original_responses: List = None,
-                                     retries: Set[int] = None, **params) -> MultiThreadState:
+                                     retries: Set[int] = None, **params) -> List:
         """
         Makes a completion request to anthropic api.
         :param raise_exception: If True, raises an exception if the request has failed.
@@ -129,8 +129,8 @@ class AnthropicManager(AbstractLLMManager[AnthropicResponse]):
                 global_state.failed_responses.add(i)
         if retries is not None:
             global_responses = self._combine_original_responses_and_retries(global_responses, original_responses, retries)
-        global_state.results = [res for res in global_responses]
-        return global_state
+        results = [res for res in global_responses]
+        return results
 
     def translate_to_response(self, task: LLMCompletionType, res: List[AnthropicResponse],
                               **params) -> Optional[SupportedLLMResponses]:
