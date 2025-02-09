@@ -720,3 +720,13 @@ class FileUtil:
         :param file_abs_path: __file__ of the current file.
         """
         return os.path.dirname(os.path.realpath(file_abs_path))
+
+    @staticmethod
+    def copy_file_contents(orig_path: str, final_path: str) -> None:
+        """
+        Copies contents of one file to another
+        :param orig_path: Original final path.
+        :param final_path: Destination file path.
+        :return: None.
+        """
+        FileUtil.write(FileUtil.read_file(orig_path), final_path)

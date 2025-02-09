@@ -168,3 +168,18 @@ class DataFrameUtil:
 
         nan_empty_indices = nan_empty_indices[nan_empty_indices].index
         return list(nan_empty_indices)
+
+    @staticmethod
+    def remove_empty_rows(df: pd.DataFrame, column_name: str | Enum = None) -> pd.DataFrame:
+        """
+        Removes rows that contain empty column value:
+        :param df: Dataframe to remove empty rows from.
+        :param column_name: If provided, only checks that col for empty data.
+        :return: Filtered dataframe.
+        """
+        columns = [column_name] if column_name else df.columns
+        empty_indices = []
+        for col in columns:
+            empty_indices.extend(DataFrameUtil.find_nan_empty_indices(df[col]))
+        indices2keep = set(df.index).difference(empty_indices)
+        return DataFrameUtil.filter_df_by_index(df, indices2keep)

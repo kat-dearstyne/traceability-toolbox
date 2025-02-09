@@ -109,6 +109,12 @@ class AbstractProjectDataFrame(pd.DataFrame):
                 if self.index_name() in row_as_dict:
                     row_as_dict.pop(self.index_name())
                 self.loc[index] = [row_as_dict.get(col, None) for col in self.get_all_column_names() if col in self.columns]
+        else:
+            orig_row = self.get_row(index)
+            for name, orig_value in orig_row.items():
+                new_value = row_as_dict.get(name)
+                if new_value != orig_value:
+                    self.update_value(name, index, new_value)
         return self.get_row(index)
 
     def get_row(self, index: Any, throw_exception: bool = False) -> EnumDict:
