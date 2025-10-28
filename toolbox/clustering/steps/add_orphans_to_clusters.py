@@ -106,7 +106,8 @@ class AddOrphansToClusters(AbstractPipelineStep[ClusteringArgs, ClusteringState]
         for i, (artifact, cluster, cluster_similarity) in enumerate(best_clusters):
             delta = cluster.min_sim - cluster_similarity if len(cluster) > 1 else 0
             within_similarity_threshold = delta < ALLOWED_ORPHAN_SIMILARITY_DELTA
-            within_cluster_size = len(cluster) < args.cluster_max_size + ALLOWED_ORPHAN_CLUSTER_SIZE_DELTA
+            within_cluster_size = (args.include_all_artifacts_in_clusters
+                                   or (len(cluster) < args.cluster_max_size + ALLOWED_ORPHAN_CLUSTER_SIZE_DELTA))
             above_minimum_score = cluster_similarity >= MIN_ORPHAN_HOME_SIMILARITY
             not_seen = artifact not in adopted_orphans
             if args.add_orphans_to_best_home or (within_similarity_threshold and above_minimum_score):
